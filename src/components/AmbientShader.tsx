@@ -107,7 +107,8 @@ export const AmbientShader: React.FC<{ className?: string }> = ({ className = ''
     const pointer = { x: 0.5, y: 0.5 };
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let frame = 0;
-    let visible = true;
+    let visible = false;
+    let running = false;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
@@ -123,7 +124,17 @@ export const AmbientShader: React.FC<{ className?: string }> = ({ className = ''
       pointer.y = 1 - (event.clientY - rect.top) / rect.height;
     };
 
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
+    const start = () => {
+      if (!running && visible && !document.hidden) {
+        running = true;
+        frame = requestAnimationFrame(render);
+      }
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) start();
+      else { cancelAnimationFrame(frame); running = false; }
+    });
     observer.observe(canvas);
     canvas.addEventListener('pointermove', move);
     window.addEventListener('resize', resize);
@@ -137,15 +148,18 @@ export const AmbientShader: React.FC<{ className?: string }> = ({ className = ''
         gl.uniform1f(time, prefersReducedMotion ? 0 : (now - startedAt) / 1000);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       }
-      frame = requestAnimationFrame(render);
+      if (visible && !document.hidden) frame = requestAnimationFrame(render);
+      else running = false;
     };
-    frame = requestAnimationFrame(render);
+    const onVisibility = () => document.hidden ? (cancelAnimationFrame(frame), running = false) : start();
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       canvas.removeEventListener('pointermove', move);
       window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibility);
       gl.deleteProgram(program);
       gl.deleteShader(vert);
       gl.deleteShader(frag);

@@ -3,14 +3,17 @@ import { CursorCanvas } from './components/CursorCanvas';
 import { SplineWebComponent } from './components/SplineWebComponent';
 import { WarpCanvas } from './components/WarpCanvas';
 import { PortfolioSections } from './components/PortfolioSections';
+import { OriginalShowcaseSections } from './components/OriginalShowcaseSections';
 import { ExperimentalSections } from './components/ExperimentalSections';
 import { soundManager } from './utils/audio';
+import { useI18n } from './i18n';
 
 type Theme = 'a' | 'b' | 'c';
 const THEME_LABELS: Record<Theme, string> = { a: 'THEME[A]', b: 'THEME[B]', c: 'THEME[C]' };
 const NEXT_THEME: Record<Theme, Theme> = { a: 'b', b: 'c', c: 'a' };
 
 export const App: React.FC = () => {
+  const { t, toggleLanguage } = useI18n();
   const [theme, setTheme] = useState<Theme>('a');
   const [soundOn, setSoundOn] = useState(false);
   const [coords, setCoords] = useState({ x: 762, y: 391 });
@@ -60,7 +63,7 @@ export const App: React.FC = () => {
             MUTSUMI.DESIGN
           </div>
           <div className="nav-right">
-            {[['WORK', '#work'], ['CONTACT', '#contact']].map(([label, href]) => (
+            {[[t('nav.work'), '#work'], [t('nav.contact'), '#contact']].map(([label, href]) => (
               <a
                 key={label}
                 className="nav-btn"
@@ -71,6 +74,7 @@ export const App: React.FC = () => {
                 {label}
               </a>
             ))}
+            <button className="nav-btn nav-btn-pill language-toggle" onClick={toggleLanguage} aria-label="Switch language">{t('nav.language')}</button>
             <button className="nav-btn nav-btn-pill" onMouseEnter={() => soundManager.playHoverBlip()} onClick={cycleTheme}>
               {THEME_LABELS[theme]}
             </button>
@@ -100,13 +104,13 @@ export const App: React.FC = () => {
             className="font-mono"
           >
             <div style={{ padding: '1.2rem 1.5rem', borderRight: '1px solid var(--border)' }}>
-              <strong>AI &amp; Systems Engineering</strong>
+              <strong>{t('hero.field')}</strong>
             </div>
             <div style={{ padding: '1.2rem 1.5rem', borderRight: '1px solid var(--border)' }}>
-              Thinking in systems.<br />Designing with care.
+              {t('hero.principle').split('\n').map((line) => <React.Fragment key={line}>{line}<br /></React.Fragment>)}
             </div>
             <div style={{ padding: '1.2rem 1.5rem' }}>
-              I'm <strong>Mutsumi Wakaba (若叶睦)</strong>, leading AI Engineering &amp; Intelligent Systems. Building products at scale.
+              {t('hero.bio')}
             </div>
           </div>
 
@@ -148,7 +152,7 @@ export const App: React.FC = () => {
                 color: 'var(--text)',
               }}
             >
-              I BRING<br />CRAFT &amp; TASTE<br />TO DIGITAL WORK
+              {t('hero.title').split('\n').map((line) => <React.Fragment key={line}>{line}<br /></React.Fragment>)}
             </h1>
 
             <div
@@ -161,7 +165,7 @@ export const App: React.FC = () => {
                 pointerEvents: 'auto',
               }}
             >
-              ✦ AI ENGINEER
+              {t('hero.role')}
             </div>
           </div>
 
@@ -178,6 +182,7 @@ export const App: React.FC = () => {
           </div>
         </section>
 
+        <OriginalShowcaseSections />
         <PortfolioSections />
         <ExperimentalSections />
 
@@ -186,26 +191,25 @@ export const App: React.FC = () => {
           <WarpCanvas />
           <div className="warp-text">
             <h2 className="warp-headline">
-              INNOVATE WITH
-              <br />A HUMAN TOUCH
+              {t('warp.title').split('\n').map((line) => <React.Fragment key={line}>{line}<br /></React.Fragment>)}
             </h2>
             <div className="warp-quotes">
-              <p>✦ Clarity first. Delight second.</p>
-              <p>✦ Ship in small loops. Aim for long arcs.</p>
-              <p>✦ Build for the people behind the screen.</p>
+              <p>{t('warp.1')}</p>
+              <p>{t('warp.2')}</p>
+              <p>{t('warp.3')}</p>
             </div>
           </div>
         </section>
 
         {/* FOOTER */}
         <footer className="site-footer" id="contact">
-          <div className="footer-orbit" aria-hidden="true"><span>AVAILABLE FOR SELECTED PROJECTS · </span></div>
+          <div className="footer-orbit" aria-hidden="true"><span>{t('footer.available')}</span></div>
           <div className="footer-content">
-            <span className="section-kicker">HAVE A COMPLEX IDEA?</span>
+            <span className="section-kicker">{t('footer.kicker')}</span>
             <h2 className="footer-cta">
-              LET'S CREATE
+              {t('footer.title1')}
               <br />
-              SOMETHING <span className="cta-accent">EXTRAORDINARY</span>
+              {t('footer.title2')} <span className="cta-accent">{t('footer.accent')}</span>
             </h2>
 
             <div className="footer-bottom">

@@ -11,6 +11,7 @@ export const WarpCanvas: React.FC = () => {
 
     let animId: number;
     let visible = false;
+    let running = false;
     let W = (canvas.width = canvas.parentElement?.clientWidth || window.innerWidth);
     let H = (canvas.height = canvas.parentElement?.clientHeight || 600);
 
@@ -37,14 +38,21 @@ export const WarpCanvas: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { rootMargin: '15% 0px' });
+    const start = () => {
+      if (!running && visible && !document.hidden) {
+        running = true;
+        animId = requestAnimationFrame(render);
+      }
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) start();
+      else { cancelAnimationFrame(animId); running = false; }
+    }, { rootMargin: '15% 0px' });
     observer.observe(canvas);
 
     const render = () => {
-      if (!visible) {
-        animId = requestAnimationFrame(render);
-        return;
-      }
+      if (!visible || document.hidden) { running = false; return; }
       ctx.fillStyle = 'rgba(4, 4, 6, 0.35)'; // Smooth star trail
       ctx.fillRect(0, 0, W, H);
 
@@ -79,8 +87,8 @@ export const WarpCanvas: React.FC = () => {
 
       animId = requestAnimationFrame(render);
     };
-
-    render();
+    const onVisibility = () => document.hidden ? (cancelAnimationFrame(animId), running = false) : start();
+    document.addEventListener('visibilitychange', onVisibility);
 
     const onResize = () => {
       if (!canvas.parentElement) return;
@@ -94,6 +102,7 @@ export const WarpCanvas: React.FC = () => {
       observer.disconnect();
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 

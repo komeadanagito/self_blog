@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Brainstorm / visual companion session files
+.superpowers/

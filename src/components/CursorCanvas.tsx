@@ -9,7 +9,8 @@ export const CursorCanvas: React.FC = () => {
     const canvas = ref.current!;
     const ctx = canvas.getContext('2d')!;
     let particles: Particle[] = [];
-    let raf: number;
+    let raf = 0;
+    let running = false;
 
     const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
@@ -30,6 +31,10 @@ export const CursorCanvas: React.FC = () => {
         });
       }
       if (particles.length > 180) particles = particles.slice(-180);
+      if (!running && !document.hidden) {
+        running = true;
+        raf = requestAnimationFrame(loop);
+      }
     };
     window.addEventListener('mousemove', onMove);
 
@@ -48,13 +53,25 @@ export const CursorCanvas: React.FC = () => {
         ctx.strokeRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
         ctx.restore();
       }
-      raf = requestAnimationFrame(loop);
+      if (particles.length && !document.hidden) raf = requestAnimationFrame(loop);
+      else running = false;
     };
-    loop();
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+        running = false;
+      } else if (particles.length && !running) {
+        running = true;
+        raf = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMove);
+      document.removeEventListener('visibilitychange', onVisibility);
       cancelAnimationFrame(raf);
     };
   }, []);

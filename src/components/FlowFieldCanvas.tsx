@@ -13,7 +13,8 @@ export const FlowFieldCanvas: React.FC = () => {
     let width = 0;
     let height = 0;
     let frame = 0;
-    let visible = true;
+    let visible = false;
+    let running = false;
     const pointer = { x: -1000, y: -1000, active: false };
     const points: Point[] = [];
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,7 +52,17 @@ export const FlowFieldCanvas: React.FC = () => {
     };
     const leave = () => { pointer.active = false; };
 
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
+    const start = () => {
+      if (!running && visible && !document.hidden) {
+        running = true;
+        frame = requestAnimationFrame(render);
+      }
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) start();
+      else { cancelAnimationFrame(frame); running = false; }
+    });
     observer.observe(canvas);
     canvas.addEventListener('pointermove', move);
     canvas.addEventListener('pointerleave', leave);
@@ -105,9 +116,11 @@ export const FlowFieldCanvas: React.FC = () => {
           context.fill();
         }
       }
-      frame = requestAnimationFrame(render);
+      if (visible && !document.hidden) frame = requestAnimationFrame(render);
+      else running = false;
     };
-    frame = requestAnimationFrame(render);
+    const onVisibility = () => document.hidden ? (cancelAnimationFrame(frame), running = false) : start();
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       cancelAnimationFrame(frame);
@@ -115,6 +128,7 @@ export const FlowFieldCanvas: React.FC = () => {
       canvas.removeEventListener('pointermove', move);
       canvas.removeEventListener('pointerleave', leave);
       window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
